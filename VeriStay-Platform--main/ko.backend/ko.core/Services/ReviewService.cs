@@ -1,0 +1,240 @@
+﻿using AutoMapper;
+using ko.core.Contracts;
+using ko.core.Models;
+using ko.entity_framework;
+using ko.entity_framework.entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using static ko.core.Exceptions.ApiException;
+
+namespace ko.core.Services
+{
+    public class ReviewService : IReviewService
+    {
+        private readonly AppDbContext _appDbContext;
+        private readonly IGenericService<Review> _genericService;
+        private readonly IAppLogger<ReviewService> _logger;
+        private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly INotificationService _notificationService;
+
+        public ReviewService(
+            AppDbContext appDbContext,
+            IGenericService<Review> genericService,
+            IAppLogger<ReviewService> logger,
+            IMapper mapper,
+            UserManager<ApplicationUser> userManager,
+            INotificationService notificationService)
+        {
+            _notificationService = notificationService;
+            _appDbContext = appDbContext;
+            _genericService = genericService;
+            _logger = logger;
+            _mapper = mapper;
+            _userManager = userManager;
+        }
+
+        #region CRUD
+
+        public async Task<ReviewDto?> AddAsync(string studentId, AddReviewDto dto)
+        {
+            var canAdd = await onInsert(dto);
+            if (!canAdd) return null;
+
+            _logger.LogInformation("Adding review from student {0} for landlord {1}", studentId, dto.LandlordId);
+
+            if (dto.Rating < 1 || dto.Rating > 5)
+                throw new ArgumentException("Rating must be between 1 and 5");
+            var property = await _appDbContext.Properties.FirstOrDefaultAsync(w => w.Id == dto.PropertyId);
+            if (property == null)
+                throw new NotFoundException(nameof(AddAsync), dto.PropertyId);
+
+            // The landlord is whoever owns the property; don't trust the id sent by the client.
+            dto.LandlordId = property.LandlordId;
+
+            var student = await _userManager.FindByIdAsync(studentId);
+            var landlord = await _userManager.FindByIdAsync(dto.LandlordId);
+
+            var entity = _mapper.Map<Review>(dto);
+            entity.StudentId = studentId;
+            entity.LandlordId = property.LandlordId;
+            entity.CreatedAt = DateTime.UtcNow;
+
+            await _appDbContext.Reviews.AddAsync(entity);
+            await _appDbContext.SaveChangesAsync();
+
+            var result = _mapper.Map<ReviewDto>(entity);
+            _logger.LogInformation("Review with id {0} has been added successfully", result.Id);
+
+            await afterInsert(dto: result);
+
+            await _notificationService.SendToUserAsync(
+                userId: property.LandlordId,
+                title: "⭐ New Review",
+                message: $"{student?.FullName ?? "A tenant"} left a {dto.Rating}-star review for {property.Title}.",
+                type: "review");
+
+            result.LandlordName = landlord?.FullName ?? string.Empty;
+            result.StudentName = student?.FullName ?? string.Empty;
+            result.PropertyTitle = property.Title;
+            return result;
+        }
+
+        public async Task<List<ReviewDto>> GetAllAsync()
+        {
+            _logger.LogInformation("Retrieving all reviews from the database");
+
+            var data = await _appDbContext.Reviews
+                .Include(r => r.Property)
+                .ToListAsync();
+
+            return await WithNamesAsync(data);
+        }
+
+        public async Task<ReviewDto?> GetByIdAsync(int? id)
+        {
+            _logger.LogInformation("Attempting to retrieve review with id {0}", id);
+
+            var entity = await _appDbContext.Reviews
+                .Include(r => r.Property)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (entity == null)
+            {
+                _logger.LogInformation("Review with id {0} was not found", id);
+                throw new NotFoundException(nameof(GetByIdAsync), id);
+            }
+
+            return (await WithNamesAsync(new List<Review> { entity }))[0];
+        }
+
+        public async Task<List<ReviewDto>> GetByLandlordIdAsync(string landlordId)
+        {
+            _logger.LogInformation("Retrieving reviews for landlord {0}", landlordId);
+
+            var data = await _appDbContext.Reviews
+                .Include(r => r.Property)
+                .Where(r => r.LandlordId == landlordId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return await WithNamesAsync(data);
+        }
+
+        public async Task<List<ReviewDto>> GetByPropertyIdAsync(int propertyId)
+        {
+            _logger.LogInformation("Retrieving reviews for property {0}", propertyId);
+
+            var data = await _appDbContext.Reviews
+                .Where(r => r.PropertyId == propertyId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+
+            var results = _mapper.Map<List<ReviewDto>>(data);
+
+            foreach (var item in results)
+            {
+                var student = await _userManager.FindByIdAsync(item.StudentId);
+                var landlord = await _userManager.FindByIdAsync(item.LandlordId);
+
+                item.StudentName = student.FullName;
+                item.LandlordName = landlord.FullName;
+            }
+
+            return results;
+        }
+
+        public async Task<List<ReviewDto>> GetByStudentIdAsync(string studentId)
+        {
+            _logger.LogInformation("Retrieving reviews written by student {0}", studentId);
+
+            var data = await _appDbContext.Reviews
+                .Include(r => r.Property)
+                .Where(r => r.StudentId == studentId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return await WithNamesAsync(data);
+        }
+
+        public async Task<double> GetAverageRatingByLandlordIdAsync(string landlordId)
+        {
+            _logger.LogInformation("Calculating average rating for landlord {0}", landlordId);
+
+            var ratings = await _appDbContext.Reviews
+                .Where(r => r.LandlordId == landlordId)
+                .Select(r => r.Rating)
+                .ToListAsync();
+
+            return ratings.Count == 0 ? 0 : Math.Round(ratings.Average(), 2);
+        }
+
+        public async Task<bool> DeleteAsync(int? id)
+        {
+            _logger.LogInformation("Attempting to delete review with id {0}", id);
+
+            var entity = await GetByIdAsync(id);
+            var canDelete = await onDelete(entity);
+            if (!canDelete) return false;
+
+            await _genericService.RemoveAsync(id);
+            _logger.LogInformation("Review with id {0} has been successfully removed", id);
+
+            await afterDelete(entity);
+            return true;
+        }
+
+        // Names come from UserManager rather than Include(r => r.Student / r.Landlord):
+        // accounts are stored as plain ApplicationUser rows, so those typed navigations
+        // turn into inner joins that drop every review.
+        private async Task<List<ReviewDto>> WithNamesAsync(List<Review> data)
+        {
+            var results = _mapper.Map<List<ReviewDto>>(data);
+            var names = new Dictionary<string, string>();
+
+            async Task<string> NameOf(string? userId)
+            {
+                if (string.IsNullOrEmpty(userId)) return string.Empty;
+                if (!names.TryGetValue(userId, out var name))
+                {
+                    name = (await _userManager.FindByIdAsync(userId))?.FullName ?? string.Empty;
+                    names[userId] = name;
+                }
+                return name;
+            }
+
+            foreach (var (dto, entity) in results.Zip(data))
+            {
+                dto.StudentName = await NameOf(entity.StudentId);
+                dto.LandlordName = await NameOf(entity.LandlordId);
+                dto.PropertyTitle = entity.Property?.Title ?? string.Empty;
+            }
+
+            return results;
+        }
+
+        #endregion
+
+        #region Events
+
+        public Task<bool> onInsert(AddReviewDto dto) => Task.FromResult(true);
+        public Task<bool> afterInsert(ReviewDto dto) => Task.FromResult(true);
+        public Task<bool> onDelete(ReviewDto dto) => Task.FromResult(true);
+        public Task<bool> afterDelete(ReviewDto dto) => Task.FromResult(true);
+
+        public async Task<double> GetAverageRatingAsync(int propertyId)
+        {
+            _logger.LogInformation("Calculating average rating for propery {0}", propertyId);
+
+            var ratings = await _appDbContext.Reviews
+                .Where(r => r.PropertyId == propertyId)
+                .Select(r => r.Rating)
+                .ToListAsync();
+
+            return ratings.Count == 0 ? 0 : Math.Round(ratings.Average(), 2);
+        }
+
+        #endregion
+    }
+}

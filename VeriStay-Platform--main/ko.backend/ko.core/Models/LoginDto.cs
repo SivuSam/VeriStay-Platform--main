@@ -1,0 +1,907 @@
+﻿using ko.entity_framework.entities;
+using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
+
+namespace ko.core.Models
+{
+    public class EmailMessage
+    {
+        public EmailMessage(string to, string subject, string body)
+        {
+            To = to;
+            Subject = subject;
+            Body = body;
+        }
+
+        public string To { get; set; }
+        public string Subject { get; set; }
+        public string Body { get; set; }
+    }
+
+    public class UpdateFcmTokenDto
+    {
+        public string UserId { get; set; }
+        public string FcmToken { get; set; }
+    }
+
+    public class StudentDashboardDataDto
+    {
+       public ProfileDto Student { get; set; }
+
+        public int ApplicationsCount { get; set; } = 0;
+        public int ApprovedCount { get; set; } = 0;
+        public int PaymentsCount { get; set; } = 0;
+        public int RequestsCount { get; set; } = 0;
+        public TenancyDto ActiveTenancy { get; set; } 
+        public List<ApplicationDto> Applications { get; set; } = new List<ApplicationDto>();
+        public List<ApplicationDto> WaitingList { get; set; } = new List<ApplicationDto>();
+        public List<AnnouncementDto> announcementDtos { get; set; } = new List<AnnouncementDto>();
+
+
+    }
+    public class LandlordDashboardDataDto
+    {
+       public ProfileDto landlord { get; set; }
+
+        public int applicationsCount { get; set; } = 0;
+        public int propertiesCount { get; set; } = 0;
+        public List<ProfileDto> tenants { get; set; } = new List<ProfileDto>();
+        public int RequestsCount { get; set; } = 0;
+        public double Score { get; set; } = 0;
+        public List<ApplicationDto> recentApplications { get; set; } = new List<ApplicationDto>();
+        public List<ApplicationDto> WaitingList { get; set; } = new List<ApplicationDto>();
+        public List<PropertyDto> propertiesDto { get; set; } = new List<PropertyDto>();
+        public List<MaintenanceRequestDto> openMantainances { get; set; } = new List<MaintenanceRequestDto>();
+
+
+    }
+    public class ResetPasswordRequestDto
+    {
+        [Required]
+        public string Email { get; set; }
+        [Required]
+        public string Token { get; set; }
+        [Required]
+        public string Password { get; set; }
+    }
+    public class RequestForgotPasswordDto
+    {
+        [Required]
+        public string Email { get; set; }
+    }
+    public class LoginDto
+    {
+        [Required]
+        public string Email { get; set; }
+        [Required]
+        public string Password { get; set; }
+    }
+    public class UpdatePropertyDto
+    {
+        [Required]
+        public int Id { get; set; }
+
+        [Required]
+        public string LandlordId { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(120)]
+        public string Title { get; set; } = string.Empty;
+
+        [MaxLength(1000)]
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(255)]
+        public string Address { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(100)]
+        public string City { get; set; } = string.Empty;
+
+        [Range(0, double.MaxValue)]
+        public decimal MonthlyRent { get; set; }
+
+        [Range(0, 100)]
+        public int AvailableBeds { get; set; }
+
+        public List<string> Amenities { get; set; } = new();
+
+        [Required]
+        public DateTime AvailableFrom { get; set; }
+
+        public bool IsAvailable { get; set; }
+    }
+
+
+    public class PropertyDto
+    {
+        public int Id { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public int AvailableBeds { get; set; }
+        public bool IsAvailable { get; set; }
+        public PropertyStatus Status { get; set; }
+        public List<string> Amenities { get; set; }
+        public DateTime AvailableFrom { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<PropertyImageDto> Images { get; set; }
+    }
+
+
+    public class FinalListingsDto
+    {
+        public List<ListingDto> recommendations { get; set; } = new List<ListingDto>();
+        public List<ListingDto> listings { get; set; } = new List<ListingDto>();
+    }
+    public class ListingDto
+    {
+        public int Id { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public int AvailableBeds { get; set; }
+        public double AverageListing { get; set; } = 0;
+        public bool IsAvailable { get; set; }
+        public PropertyStatus Status { get; set; }
+        public List<string> Amenities { get; set; }
+        public DateTime AvailableFrom { get; set; }
+        public DateTime CreatedAt { get; set; }
+        
+        public  PropertyImageDto Image { get; set; }
+    }
+    public class ListingDetailsDto
+    {
+        public int Id { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public string LandLordEmail { get; set; }
+        public string LandLordPhoneNumber { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public int AvailableBeds { get; set; }
+        public bool IsAvailable { get; set; }
+        public PropertyStatus Status { get; set; }
+        public List<string> Amenities { get; set; }
+        public DateTime AvailableFrom { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<PropertyImageDto> Images { get; set; }
+        public List<ReviewDto> Reviews { get; set; }
+    }
+
+    public class AddPropertyDto
+    {
+        [Required]
+        public string LandlordId { get; set; }
+        [Required]
+        public string Title { get; set; }
+
+        [Required]
+        public string Description { get; set; }
+
+        [Required]
+        public string Address { get; set; }
+
+        [Required]
+        public string City { get; set; }
+
+        [Required]
+        [Range(0, double.MaxValue)]
+        public decimal MonthlyRent { get; set; }
+
+        [Required]
+        [Range(1, int.MaxValue)]
+        public int AvailableBeds { get; set; }
+
+        public List<string> Amenities { get; set; } = new();
+
+        [Required]
+        public DateTime AvailableFrom { get; set; }
+    }
+
+    public class PropertyImageDto
+    {
+        public int Id { get; set; }
+        public int PropertyId { get; set; }
+        public string ImageUrl { get; set; }
+        public bool IsPrimary { get; set; }
+    }
+
+    public class AddPropertyImageDto
+    {
+        [Required]
+        public IFormFile image { get; set; }
+
+
+        [Required]
+        public int PropertyId { get; set; }
+
+        [Required]
+        public string ImageUrl { get; set; }
+
+        public bool IsPrimary { get; set; } = false;
+    }
+
+
+
+    public class VerificationDocumentDto
+    {
+        public int Id { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public string DocumentUrl { get; set; }
+        public string DocumentType { get; set; }
+        public DocumentStatus Status { get; set; }
+        public string AdminNotes { get; set; }
+        public DateTime UploadedAt { get; set; }
+    }
+
+    public class AddVerificationDocumentDto
+    {
+        [Required]
+        public string DocumentUrl { get; set; }
+
+        [Required]
+        public string DocumentType { get; set; }
+    }
+
+    public class ReviewVerificationDocumentDto
+    {
+        [Required]
+        public int DocumentId { get; set; }
+
+        [Required]
+        public DocumentStatus Status { get; set; }
+
+        public string AdminNotes { get; set; }
+    }
+
+
+
+    public class ApplicationDto
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string PropertyDescription { get; set; }
+        public string PropertyLocation { get; set; }
+        public decimal Price { get; set; }
+        public ApplicationStatus Status { get; set; }
+        public string SupportingDocumentUrl { get; set; }
+        public string LandlordNotes { get; set; } 
+        public string LandlordName { get; set; }
+        public DateTime FromDate { get; set; } = DateTime.UtcNow;
+        public DateTime ToDate { get; set; } = DateTime.UtcNow;
+        public DateTime AppliedAt { get; set; }
+        public DateTime? ReviewedAt { get; set; }
+    }
+
+    public class StudentApplication
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string PropertyDescription { get; set; }
+        public string PropertyLocation { get; set; }
+        public decimal Price { get; set; }
+        public string ProofOfRegistrationUrl { get; set; } = string.Empty;
+        public string ProofOfIncomeUrl { get; set; } = string.Empty;
+
+
+    }
+
+    public class AppNotificationDto
+    {
+        public int Id { get; set; }
+        public string UserId { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public bool IsRead { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+    public class AddApplicationDto
+    {
+        [Required]
+        public string studentId { get; set; }
+        [Required]
+        public int PropertyId { get; set; }
+
+        public DateTime FromDate { get; set; } = DateTime.UtcNow;
+        public DateTime ToDate { get; set; } = DateTime.UtcNow;
+    }
+
+    public class ReviewApplicationDto
+    {
+        [Required]
+        public int ApplicationId { get; set; }
+
+        [Required]
+        public ApplicationStatus Status { get; set; }
+
+        public string? LandlordNotes { get; set; }
+    }
+
+
+
+    public class WaitingListEntryDto
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public int Position { get; set; }
+        public bool NotificationSent { get; set; }
+        public DateTime JoinedAt { get; set; }
+    }
+
+    public class AddWaitingListEntryDto
+    {
+        [Required]
+        public int PropertyId { get; set; }
+    }
+
+
+
+    public class TenancyDto
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public string Location { get; set; }
+        public string LeaseDocument { get; set; } = string.Empty;
+        public DateTime? SignedLeaseUploadedAt { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public DateTime LeaseStartDate { get; set; }
+        public DateTime LeaseEndDate { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public TenancyStatus Status { get; set; }
+    }
+
+    public class AddTenancyDto
+    {
+        [Required]
+        public string StudentId { get; set; }
+
+        [Required]
+        public int PropertyId { get; set; }
+
+        [Required]
+        public DateTime LeaseStartDate { get; set; }
+
+        [Required]
+        public DateTime LeaseEndDate { get; set; }
+
+        [Required]
+        [Range(0, double.MaxValue)]
+        public decimal MonthlyRent { get; set; }
+    }
+
+
+
+    public class LeaseDocumentDto
+    {
+        public int Id { get; set; }
+        public int TenancyId { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string DocumentUrl { get; set; }
+        public DateTime UploadedAt { get; set; }
+    }
+
+    public class AddLeaseDocumentDto
+    {
+        [Required]
+        public int TenancyId { get; set; }
+
+        [Required]
+        public int PropertyId { get; set; }
+
+        [Required]
+        public string DocumentUrl { get; set; }
+    }
+
+
+
+    public class RentPaymentDto
+    {
+        public int Id { get; set; }
+        public int TenancyId { get; set; }
+        public string StudentName { get; set; }
+        public string StudentId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string PropertyLocation { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime DueDate { get; set; }
+        public DateTime? PaidAt { get; set; }
+        public PaymentStatus Status { get; set; }
+        public string ReceiptUrl { get; set; }
+    }
+
+    public class AddRentPaymentDto
+    {
+        [Required]
+        public int TenancyId { get; set; }
+
+        [Required]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0")]
+        public decimal Amount { get; set; }
+
+        [Required]
+        public DateTime DueDate { get; set; }
+    }
+
+    public class MarkRentPaidDto
+    {
+        [Required]
+        public int RentPaymentId { get; set; }
+        public string ReceiptUrl { get; set; } = string.Empty;
+    }
+
+    public class LandlordPaymentSummaryDto
+    {
+        public int TenancyId { get; set; }
+        public string StudentName { get; set; }
+        public string StudentId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string PropertyLocation { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public int TotalPayments { get; set; }
+        public int PaidCount { get; set; }
+        public int PendingCount { get; set; }
+        public int OverdueCount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal TotalOwed { get; set; }
+        public List<RentPaymentDto> Payments { get; set; } = new();
+    }
+
+    public class DisputeDto
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public string StudentEmail { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public string LandlordEmail { get; set; }
+        public int? PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DisputeStatus Status { get; set; }
+        public string AdminNotes { get; set; }
+        public string Resolution { get; set; }
+        public DateTime? ResolvedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string LandlordResponse { get; set; }
+        public DateTime? LandlordRespondedAt { get; set; }
+    }
+
+    public class AddDisputeDto
+    {
+        [Required] public string StudentId { get; set; }
+        [Required] public string LandlordId { get; set; }
+        public int? PropertyId { get; set; }
+        [Required] public string Title { get; set; }
+        [Required] public string Description { get; set; }
+    }
+
+    public class UpdateDisputeDto
+    {
+        [Required] public string StudentId { get; set; }
+        [Required] public string Title { get; set; }
+        [Required] public string Description { get; set; }
+    }
+
+    public class UpdateComplaintDto
+    {
+        [Required] public string SubmittedById { get; set; }
+        [Required] public ComplaintType Type { get; set; }
+        [Required] public string Title { get; set; }
+        [Required] public string Description { get; set; }
+    }
+
+    public class ResolveDisputeDto
+    {
+        [Required] public int DisputeId { get; set; }
+        [Required] public string Resolution { get; set; }
+        public string AdminNotes { get; set; } = string.Empty;
+        public DisputeStatus Status { get; set; } = DisputeStatus.Resolved;
+    }
+
+    public class UpdateComplaintStatusDto
+    {
+        [Required]
+        public ComplaintStatus Status { get; set; }
+
+        public string AdminNotes { get; set; } = string.Empty;
+    }
+    public class ComplaintDto
+    {
+        public int Id { get; set; }
+        public string SubmittedById { get; set; }
+        public string SubmittedByName { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public int? PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public ComplaintType Type { get; set; }
+        public ComplaintStatus Status { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string AdminNotes { get; set; }
+        public bool IsNotified { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string LandlordResponse { get; set; }
+        public DateTime? LandlordRespondedAt { get; set; }
+    }
+
+    public class LandlordResponseDto
+    {
+        [Required] public string LandlordId { get; set; }
+        [Required] public string Response { get; set; }
+    }
+
+    public class AddComplaintDto
+    {
+        [Required] public string SubmittedById { get; set; }
+        public string? LandlordId { get; set; }
+        public int? PropertyId { get; set; }
+        [Required] public ComplaintType Type { get; set; }
+        [Required] public string Title { get; set; }
+        [Required] public string Description { get; set; }
+    }
+
+    public class SuspendLandlordDto
+    {
+        [Required] public string LandlordId { get; set; }
+        [Required] public string Reason { get; set; }
+        public bool IsSuspended { get; set; } = true;
+    }
+
+    public class UserAccountDto
+    {
+        public string Id { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string Role { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public int PropertyCount { get; set; }
+        public int ApplicationCount { get; set; }
+    }
+
+    public class UpdateUserAccountDto
+    {
+        [Required] public string FullName { get; set; }
+        [Required, EmailAddress] public string Email { get; set; }
+        public string? PhoneNumber { get; set; }
+    }
+
+    public class AccommodationReportDto
+    {
+        public int TotalProperties { get; set; }
+        public int ApprovedProperties { get; set; }
+        public int PendingProperties { get; set; }
+        public int TotalBeds { get; set; }
+        public int OccupiedBeds { get; set; }
+        public int AvailableBeds { get; set; }
+        public decimal OccupancyRate { get; set; }
+        public int TotalStudents { get; set; }
+        public int TotalAvailableBeds { get; set; }
+
+        public int HousedStudents { get; set; }
+        public int OpenDisputes { get; set; }
+        public int OpenComplaints { get; set; }
+        public int SuspendedLandlords { get; set; }
+        public List<CityReportDto> CityBreakdown { get; set; } = new();
+    }
+
+    public class CityReportDto
+    {
+        public string City { get; set; }
+        public int PropertyCount { get; set; }
+        public int TotalBeds { get; set; }
+        public int OccupiedBeds { get; set; }
+        public decimal OccupancyRate { get; set; }
+    }
+
+    public class LandlordPaymentsOverviewDto
+    {
+        public decimal TotalCollected { get; set; }
+        public decimal TotalOutstanding { get; set; }
+        public decimal TotalOverdue { get; set; }
+        
+        public List<LandlordPaymentSummaryDto> TenancySummaries { get; set; } = new();
+    }
+
+    public class SendReminderDto
+    {
+        [Required] public int TenancyId { get; set; }
+        public string? StudentId { get; set; }
+        public string? StudentEmail { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class StudentPaymentSummaryDto
+    {
+        public int TenancyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string PropertyLocation { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public int TotalPayments { get; set; }
+        public int PaidCount { get; set; }
+        public int PendingCount { get; set; }
+        public int OverdueCount { get; set; }
+        public decimal TotalPaid { get; set; }
+        public decimal TotalOwed { get; set; }
+        public List<RentPaymentDto> Payments { get; set; } = new();
+    }
+
+
+    
+
+
+    public class MaintenanceRequestDto
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public MaintenancePriority Priority { get; set; }
+        public MaintenanceStatus Status { get; set; }
+        public List<string> PhotoUrls { get; set; }
+        public string LandlordResponse { get; set; }
+        public DateTime SubmittedAt { get; set; }
+        public DateTime? ResolvedAt { get; set; }
+    }
+
+    public class AddMaintenanceRequestDto
+    {
+        [Required]
+        public int PropertyId { get; set; }
+
+        [Required]
+        public string Title { get; set; }
+
+        [Required]
+        public string Description { get; set; }
+
+        [Required]
+        public MaintenancePriority Priority { get; set; }
+
+    }
+
+    public class LandlordUpdateMaintenanceDto
+    {
+        [Required] public string LandlordId { get; set; }
+        [Required] public MaintenanceStatus Status { get; set; }
+        public string LandlordResponse { get; set; } = string.Empty;
+    }
+
+    public class UpdateMaintenanceRequestDto
+    {
+        [Required]
+        public int Id { get; set; }
+
+        [Required]
+        public MaintenanceStatus Status { get; set; }
+
+        public string LandlordResponse { get; set; }
+    }
+
+    public class CityBreakdownDto
+    {
+        public string City { get; set; }
+        public int PropertyCount { get; set; }
+        public int TenancyCount { get; set; }
+        public int AvailableBeds { get; set; }  
+        public int OccupiedBeds { get; set; }  
+    }
+    public class AdminDashboardDto
+    {
+        public int TotalLandlords { get; set; }
+        public int PendingLandlords { get; set; }
+        public int TotalProperties { get; set; }
+        public int PendingProperties { get; set; }
+        public int TotalStudents { get; set; }
+        public int TotalApplications { get; set; }
+        public int TotalTenancies { get; set; }
+        public int OpenMaintenanceCount { get; set; }
+        public int TotalAvailableBeds { get; set; }
+        public List<CityBreakdownDto> cityBreakdown { get; set; } = new List<CityBreakdownDto>();
+        public List<AdminLandlordDto> PendingLandlordsList { get; set; } = new();
+        public List<AdminPropertyDto> PendingPropertiesList { get; set; } = new();
+        public List<AdminDisputeDto> RecentDisputes { get; set; } = new();
+        public List<CityDistributionDto> CityDistribution { get; set; } = new();
+    }
+
+    public class AdminLandlordDto
+    {
+        public string Id { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+
+        public VerificationStatus VerificationStatus { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+        public int PropertiesCount { get; set; }
+        public string? DocumentsUrl { get; set; }
+    }
+
+    public class AdminPropertyDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Address { get; set; }
+        public string City { get; set; }
+        public decimal MonthlyRent { get; set; }
+        public int AvailableBeds { get; set; }
+        public string LandlordName { get; set; }
+        public string LandlordId { get; set; }
+        public int Status { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class AdminDisputeDto
+    {
+        public int Id { get; set; }
+        public string StudentName { get; set; }
+        public string LandlordName { get; set; }
+        public string Description { get; set; }
+        public int Status { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string? AdminResolutionNotes { get; set; }
+    }
+
+    public class CityDistributionDto
+    {
+        public string City { get; set; }
+        public int PropertyCount { get; set; }
+        public int TenancyCount { get; set; }
+    }
+
+   
+
+
+
+    public class AnnouncementDto
+    {
+        public int Id { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public string Message { get; set; }
+        public DateTime PostedAt { get; set; }
+    }
+
+    public class AddAnnouncementDto
+    {
+        [Required]
+        public int PropertyId { get; set; }
+
+        [Required]
+        [StringLength(1000)]
+        public string Message { get; set; }
+    }
+
+
+
+    public class ReviewDto
+    {
+        public int Id { get; set; }
+        public string StudentId { get; set; }
+        public string StudentName { get; set; }
+        public string LandlordId { get; set; }
+        public string LandlordName { get; set; }
+        public int PropertyId { get; set; }
+        public string PropertyTitle { get; set; }
+        public int Rating { get; set; }
+        public string Comment { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class AddReviewDto
+    {
+        [Required]
+        public string LandlordId { get; set; }
+
+        [Required]
+        public int PropertyId { get; set; }
+
+        [Required]
+        [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5")]
+        public int Rating { get; set; }
+
+        [StringLength(1000)]
+        public string Comment { get; set; }
+    }
+
+
+
+    
+
+
+
+    public class LandlordDto
+    {
+        public string Id { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public VerificationStatus VerificationStatus { get; set; }
+        public double ReputationScore { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    public class RegisterLandlordDto
+    {
+        [Required]
+        [Display(Name = "Full Name")]
+        public string FullName { get; set; }
+
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
+        [Phone]
+        public string PhoneNumber { get; set; }
+
+        [Required]
+        [DataType(DataType.Password)]
+        [StringLength(100, MinimumLength = 8)]
+        public string Password { get; set; }
+
+    }
+
+
+
+    public class StudentDto
+    {
+        public string Id { get; set; }
+        public string FullName { get; set; }
+        public string Email { get; set; }
+        public string PhoneNumber { get; set; }
+        public string StudentNumber { get; set; }
+        public string University { get; set; }
+        public decimal Budget { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    public class JwtSettings
+    {
+        public string Key { get; set; }
+        public string Issuer { get; set; }
+        public string Audience { get; set; }
+        public int DurationInMinutes { get; set; }
+    }
+}

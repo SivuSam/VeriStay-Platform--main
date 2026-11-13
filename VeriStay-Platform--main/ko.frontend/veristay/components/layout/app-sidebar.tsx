@@ -1,0 +1,73 @@
+import { GraduationCapIcon, LayoutDashboard, LifeBuoy } from 'lucide-react';
+import * as React from 'react';
+
+import { NavMain } from '@/components/layout/nav-main';
+import { NavSecondary } from '@/components/layout/nav-secondary';
+import { NavUser } from '@/components/layout/nav-user';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import Link from 'next/link';
+import { Role, useUser } from '@/hooks/use-user';
+
+const navMainStudent = [{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard }];
+const navMainLandlord = [{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard }];
+
+const navMainAdmin = [
+    { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
+];
+
+const navSecondary = [
+    {
+        title: 'Support',
+        url: '/support',
+        icon: LifeBuoy,
+    },
+];
+
+export function AppSidebar() {
+    const currentUser = useUser();
+    function getNavMainByRole(role: Role) {
+        switch (role) {
+            case Role.Student:
+                return navMainStudent;
+            case Role.Admin:
+                return navMainAdmin;
+            case Role.Landlord:
+                return navMainLandlord;
+
+        }
+    }
+    const navmenu = getNavMainByRole(currentUser.role);
+    return (
+        <Sidebar variant={'sidebar'} className="bg-secondary/50 border-r border-secondary/20">
+            <SidebarHeader>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" asChild>
+                            <Link href="#">
+                                <GraduationCapIcon className="size-5" />
+                                <div className="text-lg leading-tight">
+                                    <span className="font-bold text-primary">Veristay</span>
+                                </div>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
+            <SidebarContent>
+                <NavMain items={navmenu} />
+                <NavSecondary items={navSecondary} className="mt-auto bg-primary/20" />
+            </SidebarContent>
+            <SidebarFooter>
+                <NavUser />
+            </SidebarFooter>
+        </Sidebar>
+    );
+}

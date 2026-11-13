@@ -1,0 +1,100 @@
+﻿using ko.core.Contracts;
+using ko.core.Models;
+using Microsoft.AspNetCore.Mvc;
+
+namespace ko.api.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class MaintenanceRequestController : ControllerBase
+    {
+        private readonly IMaintenanceRequestService _maintenanceRequestService;
+        private readonly IAppLogger<MaintenanceRequestController> _logger;
+
+        public MaintenanceRequestController(IMaintenanceRequestService maintenanceRequestService, IAppLogger<MaintenanceRequestController> logger)
+        {
+            _maintenanceRequestService = maintenanceRequestService;
+            _logger = logger;
+        }
+
+        [HttpPost("{studentId}")]
+        public async Task<ActionResult<ApiResponse<MaintenanceRequestDto>>> Add(string studentId, [FromBody] AddMaintenanceRequestDto dto)
+        {
+            _logger.LogInformation("POST api/maintenancerequest/{0} - Adding maintenance request", studentId);
+            var result = await _maintenanceRequestService.AddAsync(studentId, dto);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id },
+                ApiResponse.Success(result, "Maintenance request submitted successfully"));
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<ApiResponse<List<MaintenanceRequestDto>>>> GetAll()
+        {
+            _logger.LogInformation("GET api/maintenancerequest - Retrieving all maintenance requests");
+            var result = await _maintenanceRequestService.GetAllAsync();
+            return Ok(ApiResponse.Success(result, "Maintenance requests retrieved successfully"));
+        }
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<ApiResponse<MaintenanceRequestDto>>> GetById(int id)
+        {
+            _logger.LogInformation("GET api/maintenancerequest/{0} - Retrieving maintenance request", id);
+            var result = await _maintenanceRequestService.GetByIdAsync(id);
+            return Ok(ApiResponse.Success(result, "Maintenance request retrieved successfully"));
+        }
+
+        [HttpGet("student/{studentId}")]
+        public async Task<ActionResult<ApiResponse<List<MaintenanceRequestDto>>>> GetByStudentId(string studentId)
+        {
+            _logger.LogInformation("GET api/maintenancerequest/student/{0} - Retrieving maintenance requests for student", studentId);
+            var result = await _maintenanceRequestService.GetByStudentIdAsync(studentId);
+            return Ok(ApiResponse.Success(result, "Student maintenance requests retrieved successfully"));
+        }
+
+        [HttpGet("property/{propertyId:int}")]
+        public async Task<ActionResult<ApiResponse<List<MaintenanceRequestDto>>>> GetByPropertyId(int propertyId)
+        {
+            _logger.LogInformation("GET api/maintenancerequest/property/{0} - Retrieving maintenance requests for property", propertyId);
+            var result = await _maintenanceRequestService.GetByPropertyIdAsync(propertyId);
+            return Ok(ApiResponse.Success(result, "Property maintenance requests retrieved successfully"));
+        }
+        [HttpPut("mark-as-resolved")]
+        public async Task<ActionResult<ApiResponse<bool>>> MarkAsResolved(UpdateMaintenanceRequestDto updateMaintenanceRequestDto)
+        {
+            var result = await _maintenanceRequestService.MarkAsResolvedAsync(updateMaintenanceRequestDto);
+            return Ok(ApiResponse.Success(result, "Request updated Successfully successfully"));
+        }
+
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<ApiResponse<bool>>> Update(int id, [FromBody] AddMaintenanceRequestDto dto)
+        {
+            _logger.LogInformation("PUT api/maintenancerequest/{0} - Updating maintenance request", id);
+            var result = await _maintenanceRequestService.UpdateAsync(id, dto);
+            return Ok(ApiResponse.Success(result, "Maintenance request updated successfully"));
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
+        {
+            _logger.LogInformation("DELETE api/maintenancerequest/{0} - Deleting maintenance request", id);
+            var result = await _maintenanceRequestService.DeleteAsync(id);
+            return Ok(ApiResponse.Success(result, "Maintenance request deleted successfully"));
+        }
+
+        [HttpPut("{id:int}/landlord")]
+        public async Task<ActionResult<ApiResponse<bool>>> LandlordUpdate(int id, [FromBody] LandlordUpdateMaintenanceDto dto)
+        {
+            _logger.LogInformation("PUT api/maintenancerequest/{0}/landlord - Landlord updating maintenance request", id);
+            var result = await _maintenanceRequestService.LandlordUpdateAsync(id, dto);
+            return Ok(ApiResponse.Success(result, "Maintenance request updated successfully"));
+        }
+
+        [HttpDelete("{id:int}/landlord/{landlordId}")]
+        public async Task<ActionResult<ApiResponse<bool>>> LandlordDelete(int id, string landlordId)
+        {
+            _logger.LogInformation("DELETE api/maintenancerequest/{0}/landlord - Landlord deleting maintenance request", id);
+            var result = await _maintenanceRequestService.LandlordDeleteAsync(id, landlordId);
+            return Ok(ApiResponse.Success(result, "Maintenance request deleted successfully"));
+        }
+
+    }
+}
